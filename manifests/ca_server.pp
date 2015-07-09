@@ -14,5 +14,6 @@ class cutover::ca_server (
     section => $ca_server_section,
     setting => 'ca_server',
     value   => $ca_server,
+    notify  => Exec['remove_ssldir'],
   }
 }

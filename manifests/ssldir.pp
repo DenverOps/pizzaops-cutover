@@ -7,10 +7,20 @@ class cutover::ssldir ( $ssldir ) {
     service { 'pe-puppet': }
   }
 
-  file { 'ssldir':
-    ensure => absent,
-    path   => $ssldir,
-    force  => true,
-    notify => Service['pe-puppet'],
+  exec { 'remove_ssldir':
+    command     => "/bin/rm -rf ${ssldir}",
+    refreshonly => true,
+    onlyif      => "/usr/bin/test ${ssldir}",
+    notify      => Service['pe-puppet']
   }
+
+  exec { 'remove_crl':
+    command     => "/bin/rm -f ${ssldir}/crl.pem",
+    refreshonly => true,
+    onlyif      => "/bin/bash -c '/opt/puppet/bin/openssl crl -in /etc/puppetlabs/puppet/ssl/crl.pem -text -noout |/bin/grep pupsnq01'", #REMEMBER /bin/bash is wrong on RHEL 7
+    require     => Exec['remove_ssldir'],
+    notify      => Service['pe-puppet'],
+  }
+
+    ### USE WITH STAGES ###
 }
